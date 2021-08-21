@@ -252,6 +252,7 @@ class OSS
      */
     public function fdown($signedUrl = '', $path = '')
     {
+        $is_go = true;
         if (empty($signedUrl)) {
             //echo "[ERROR] {$path}";
             return false;
@@ -259,6 +260,13 @@ class OSS
         try {
             is_dir(dirname($path)) || $this->mkdir($path);
 
+            if(file_exists($path))
+			{
+				$is_go = false;
+				echo "当前目录中，文件".$path."存在";
+				return true;
+			}
+            
             $fileUrl = fopen($signedUrl, 'rb');
             if ($fileUrl) {
                 // 获取文件大小
@@ -280,6 +288,7 @@ class OSS
                 $fileSave = fopen($path, 'wb');
                 $downlen = 0;
                 if ($fileSave) {
+                    echo $path.PHP_EOL;
                     while (!feof($fileUrl)) {
                         $data = fread($fileUrl, 1024 * 8);    //默认获取8K
                         $downlen += strlen($data);    // 累计已经下载的字节数
@@ -296,8 +305,8 @@ class OSS
                             printf("文件总量: %s 已下载：%dM \r", $filesize, $downlen / 1024);
                         }
 
-                        //ob_flush();
-                        //flush();
+                        ob_flush();
+                        flush();
                     }
                 }
             }
@@ -306,8 +315,19 @@ class OSS
             //echo "$path " . $exception->getMessage() . PHP_EOL;
             return false;
         } finally {
-            fclose($fileUrl);
-            fclose($fileSave);
+            if ($is_go)
+			{
+				try {
+					fclose($fileUrl);
+				} catch (\Error | \Exception $exception) {
+					printf("fclose($fileUrl);");
+				}
+				try {
+					fclose($fileSave);
+				} catch (\Error | \Exception $exception) {
+					printf("fclose($fileSave);");
+				}
+			}
         }
 
         return true;
