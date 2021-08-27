@@ -49,10 +49,11 @@ class Mysql
         }
 
         try {
-            $this->handle = new PDO(
+            $this->handle = @new PDO(
                 $dns,
                 $this->username,
-                $this->passwd
+                $this->passwd,
+				array(PDO::ATTR_PERSISTENT => true)
             );
         } catch (PDOException $e) {
             //            echo "** 数据库链接错误，请检查配置！".PHP_EOL;
